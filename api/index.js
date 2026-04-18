@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+  // শুধু POST রিকোয়েস্ট গ্রহণ করবে
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -9,11 +10,11 @@ export default async function handler(req, res) {
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
   try {
-    // Vercel Environment Variables থেকে ডাটা নেওয়া
     const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+    // প্রাইভেট কী-এর লাইন ব্রেক (\n) ঠিক করা
     const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
-    // JWT টোকেন তৈরি (গুগলকে ভেরিফাই করার জন্য)
+    // JWT পেলোড তৈরি
     const iat = Math.floor(Date.now() / 1000);
     const exp = iat + 3600;
 
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
       scope: "https://www.googleapis.com/auth/indexing"
     };
 
+    // টোকেন সাইন করা
     const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
 
     // ১. গুগলের কাছ থেকে এক্সেস টোকেন নেওয়া
@@ -36,9 +38,14 @@ export default async function handler(req, res) {
     });
 
     const oauthData = await oauthResponse.json();
+    
+    if (!oauthResponse.ok) {
+        return res.status(401).json({ error: "Auth Failed: " + (oauthData.error_description || oauthData.error) });
+    }
+
     const accessToken = oauthData.access_token;
 
-    // ২. গুগল ইনডেক্সিং এপিআই-তে রিকোয়েস্ট পাঠানো
+    // ২. গুগল ইনডেক্সিং এপিআই-তে পাবলিশ করা
     const indexingResponse = await fetch('https://indexing.googleapis.com/v1/urlNotifications:publish', {
       method: 'POST',
       headers: {
@@ -56,10 +63,10 @@ export default async function handler(req, res) {
     if (indexingResponse.ok) {
       return res.status(200).json({ message: 'Success! Google notified.', data: indexingData });
     } else {
-      return res.status(indexingResponse.status).json({ error: indexingData.error.message });
+      return res.status(indexingResponse.status).json({ error: indexingData.error ? indexingData.error.message : 'Indexing failed' });
     }
 
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Server Error: " + error.message });
   }
-}
+};
