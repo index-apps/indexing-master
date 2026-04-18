@@ -1,1 +1,70 @@
-<h1>Authority Indexing Master Site</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authority Indexing Master</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; color: white; margin: 0; }
+        .container { background: #1e293b; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 450px; border: 1px solid #334155; }
+        h2 { color: #38bdf8; margin-bottom: 0.5rem; text-align: center; }
+        p { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+        input { width: 100%; padding: 14px; margin-bottom: 1.2rem; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; background: #0f172a; color: white; font-size: 1rem; }
+        input:focus { outline: none; border-color: #38bdf8; }
+        button { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0ea5e9; transform: translateY(-1px); }
+        #status { margin-top: 1.5rem; text-align: center; padding: 10px; border-radius: 4px; font-size: 0.85rem; display: none; word-break: break-all; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #38bdf8; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Indexing Master</h2>
+        <p>Enter your URL to notify Google immediately.</p>
+        <input type="url" id="urlInput" placeholder="https://example.com/your-post" required>
+        <button onclick="submitLink()" id="submitBtn">Submit to Engine</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function submitLink() {
+            const url = document.getElementById('urlInput').value;
+            const statusDiv = document.getElementById('status');
+            const btn = document.getElementById('submitBtn');
+            
+            if(!url || !url.startsWith('http')) {
+                alert("Please enter a valid URL (starting with http:// or https://)");
+                return;
+            }
+
+            btn.disabled = true;
+            statusDiv.style.display = "block";
+            statusDiv.style.background = "#334155";
+            statusDiv.innerHTML = '<div class="loader"></div> Processing...';
+            
+            try {
+                const response = await fetch('/api/index', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const result = await response.json();
+                
+                if(response.ok) {
+                    statusDiv.style.background = "#064e3b";
+                    statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
+                } else {
+                    statusDiv.style.background = "#7f1d1d";
+                    statusDiv.innerText = "❌ Error: " + (result.error || "Submission Failed");
+                }
+            } catch (err) {
+                statusDiv.style.background = "#7f1d1d";
+                statusDiv.innerText = "❌ Connection Error: " + err.message;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
