@@ -3,9 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta name="google-site-verification" content="এখানে_আপনার_কোড_বসান" />
-    
     <title>Authority Indexing Master</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; color: white; margin: 0; }
@@ -32,8 +29,7 @@
 
     <script>
         async function submitLink() {
-            const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value.trim();
+            const url = document.getElementById('urlInput').value;
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('submitBtn');
             
@@ -42,26 +38,22 @@
                 return;
             }
 
-            // UI আপডেট
             btn.disabled = true;
             statusDiv.style.display = "block";
             statusDiv.style.background = "#334155";
             statusDiv.innerHTML = '<div class="loader"></div> Processing...';
             
             try {
-                // সরাসরি আপনার Vercel API-তে কল করা হচ্ছে
                 const response = await fetch('/api/index', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
                 });
-                
                 const result = await response.json();
                 
                 if(response.ok) {
                     statusDiv.style.background = "#064e3b";
-                    statusDiv.innerText = "✅ Success: URL Sent to Google!";
-                    urlInput.value = ""; // বক্স ক্লিয়ার করা
+                    statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
                 } else {
                     statusDiv.style.background = "#7f1d1d";
                     statusDiv.innerText = "❌ Error: " + (result.error || "Submission Failed");
