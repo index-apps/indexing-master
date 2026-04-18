@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="আপনার_ভেরিফিকেশন_কোড" />
     <title>Authority Indexing Master</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; color: white; margin: 0; }
@@ -14,7 +13,7 @@
         input:focus { outline: none; border-color: #38bdf8; }
         button { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
         button:hover { background: #0ea5e9; transform: translateY(-1px); }
-        #status { margin-top: 1.5rem; text-align: center; padding: 10px; border-radius: 4px; font-size: 0.85rem; display: none; word-break: break-all; }
+        #status { margin-top: 1.5rem; text-align: center; padding: 10px; border-radius: 4px; font-size: 0.85rem; display: none; word-break: break-all; min-height: 40px; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #38bdf8; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -40,34 +39,39 @@
                 return;
             }
 
+            // বাটন ডিজেবল এবং প্রসেসিং দেখানো
             btn.disabled = true;
             statusDiv.style.display = "block";
             statusDiv.style.background = "#334155";
             statusDiv.innerHTML = '<div class="loader"></div> Processing...';
             
             try {
-                // এখানে পাথটি আপডেট করা হয়েছে
-                const response = await fetch('api/index', { 
+                // এখানে পাথটি ঠিক করা হয়েছে। শুরুতে একটি '/' যোগ করা হয়েছে যাতে রুট থেকে পায়।
+                const response = await fetch('/api/index', { 
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ url: url })
                 });
 
-                // রেসপন্স JSON কি না তা চেক করা
                 const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
+                
+                if (contentType && contentType.includes("application/json")) {
                     const result = await response.json();
+                    
                     if(response.ok) {
                         statusDiv.style.background = "#064e3b";
                         statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
                         urlInput.value = ""; 
                     } else {
                         statusDiv.style.background = "#7f1d1d";
-                        statusDiv.innerText = "❌ Error: " + (result.error || "Submission Failed");
+                        statusDiv.innerText = "❌ API Error: " + (result.error || "Submission Failed");
                     }
                 } else {
-                    // যদি HTML এরর পেজ আসে
-                    throw new Error("Server returned HTML instead of JSON. Please check your Vercel deployment.");
+                    // যদি HTML আসে, তার মানে Vercel API খুঁজে পাচ্ছে না
+                    throw new Error("Server returned HTML. Make sure your 'vercel.json' is in the root folder.");
                 }
 
             } catch (err) {
