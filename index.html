@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="আপনার_ভেরিফিকেশন_কোড" />
     <title>Authority Indexing Master</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; color: white; margin: 0; }
@@ -29,7 +30,8 @@
 
     <script>
         async function submitLink() {
-            const url = document.getElementById('urlInput').value;
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('submitBtn');
             
@@ -44,20 +46,30 @@
             statusDiv.innerHTML = '<div class="loader"></div> Processing...';
             
             try {
-                const response = await fetch('/api/index', {
+                // এখানে পাথটি আপডেট করা হয়েছে
+                const response = await fetch('api/index', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
                 });
-                const result = await response.json();
-                
-                if(response.ok) {
-                    statusDiv.style.background = "#064e3b";
-                    statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
+
+                // রেসপন্স JSON কি না তা চেক করা
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const result = await response.json();
+                    if(response.ok) {
+                        statusDiv.style.background = "#064e3b";
+                        statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
+                        urlInput.value = ""; 
+                    } else {
+                        statusDiv.style.background = "#7f1d1d";
+                        statusDiv.innerText = "❌ Error: " + (result.error || "Submission Failed");
+                    }
                 } else {
-                    statusDiv.style.background = "#7f1d1d";
-                    statusDiv.innerText = "❌ Error: " + (result.error || "Submission Failed");
+                    // যদি HTML এরর পেজ আসে
+                    throw new Error("Server returned HTML instead of JSON. Please check your Vercel deployment.");
                 }
+
             } catch (err) {
                 statusDiv.style.background = "#7f1d1d";
                 statusDiv.innerText = "❌ Connection Error: " + err.message;
