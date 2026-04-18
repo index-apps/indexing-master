@@ -1,5 +1,8 @@
 {
+  "name": "indexing-master",
+  "version": "1.0.0",
+  "main": "api/index.js",
   "dependencies": {
-    "googleapis": "^126.0.0"
+    "jsonwebtoken": "^9.0.0"
   }
 }
