@@ -3,84 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authority Indexing Master</title>
+    <title>Latest Indexing Updates</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; color: white; margin: 0; }
-        .container { background: #1e293b; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 450px; border: 1px solid #334155; }
-        h2 { color: #38bdf8; margin-bottom: 0.5rem; text-align: center; }
-        p { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
-        input { width: 100%; padding: 14px; margin-bottom: 1.2rem; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; background: #0f172a; color: white; font-size: 1rem; }
-        input:focus { outline: none; border-color: #38bdf8; }
-        button { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #0ea5e9; transform: translateY(-1px); }
-        #status { margin-top: 1.5rem; text-align: center; padding: 10px; border-radius: 4px; font-size: 0.85rem; display: none; word-break: break-all; min-height: 40px; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #38bdf8; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        #posts { margin-top: 20px; }
+        .post-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s; }
+        .post-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .post-title { font-size: 1.2em; font-weight: bold; color: #2980b9; margin-bottom: 5px; }
+        .post-url { color: #7f8c8d; word-break: break-all; font-size: 0.9em; }
+        .date { font-size: 0.8em; color: #bdc3c7; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Indexing Master</h2>
-        <p>Enter your URL to notify Google immediately.</p>
-        <input type="url" id="urlInput" placeholder="https://example.com/your-post" required>
-        <button onclick="submitLink()" id="submitBtn">Submit to Engine</button>
-        <div id="status"></div>
-    </div>
+
+    <h1>Global Indexing Feed</h1>
+    <div id="posts">Loading latest posts...</div>
 
     <script>
-        async function submitLink() {
-            const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value.trim();
-            const statusDiv = document.getElementById('status');
-            const btn = document.getElementById('submitBtn');
-            
-            if(!url || !url.startsWith('http')) {
-                alert("Please enter a valid URL (starting with http:// or https://)");
-                return;
-            }
+        // আপনার সুপাবেস তথ্য এখানে দিন (এগুলো পাবলিকলি দিলে সমস্যা নেই কারণ আমরা শুধু সিলেক্ট পারমিশন দেব)
+        const SB_URL = 'https://seahqhzosfsrwwwehnmq.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlYWhxaHpvc2Zzcnd3d2Vobm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NjY2MzQsImV4cCI6MjA5NDM0MjYzNH0.XcOmf5HETqLDYTn6JmjYMX-W45mRA8hidiZTZlH7Ipo';
 
-            // বাটন ডিজেবল এবং প্রসেসিং দেখানো
-            btn.disabled = true;
-            statusDiv.style.display = "block";
-            statusDiv.style.background = "#334155";
-            statusDiv.innerHTML = '<div class="loader"></div> Processing...';
-            
+        async function fetchPosts() {
             try {
-                // এখানে পাথটি ঠিক করা হয়েছে। শুরুতে একটি '/' যোগ করা হয়েছে যাতে রুট থেকে পায়।
-                const response = await fetch('/api/index', { 
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ url: url })
-                });
-
-                const contentType = response.headers.get("content-type");
-                
-                if (contentType && contentType.includes("application/json")) {
-                    const result = await response.json();
-                    
-                    if(response.ok) {
-                        statusDiv.style.background = "#064e3b";
-                        statusDiv.innerText = "✅ Success: " + (result.message || "URL Sent to Google!");
-                        urlInput.value = ""; 
-                    } else {
-                        statusDiv.style.background = "#7f1d1d";
-                        statusDiv.innerText = "❌ API Error: " + (result.error || "Submission Failed");
+                const response = await fetch(`${SB_URL}/rest/v1/posts?select=*&order=created_at.desc&limit=50`, {
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`
                     }
-                } else {
-                    // যদি HTML আসে, তার মানে Vercel API খুঁজে পাচ্ছে না
-                    throw new Error("Server returned HTML. Make sure your 'vercel.json' is in the root folder.");
+                });
+                const data = await response.json();
+                const container = document.getElementById('posts');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;">No posts found yet.</p>';
+                    return;
                 }
 
-            } catch (err) {
-                statusDiv.style.background = "#7f1d1d";
-                statusDiv.innerText = "❌ Connection Error: " + err.message;
-            } finally {
-                btn.disabled = false;
+                container.innerHTML = data.map(post => `
+                    <div class="post-card">
+                        <div class="post-title">${post.title || 'No Title'}</div>
+                        <div class="post-url"><a href="${post.url}" target="_blank">${post.url}</a></div>
+                        <div class="date">${new Date(post.created_at).toLocaleString()}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('posts').innerHTML = 'Failed to load posts.';
             }
         }
+
+        fetchPosts();
     </script>
 </body>
 </html>
